@@ -103,7 +103,7 @@ class LineLattice(Lattice):
             weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
-        onsite_loops = [(i, i, onsite_parameter) for i in range(num_nodes)]
+        onsite_loops = [(i, i, onsite_potential) for i in range(num_nodes)]
         weighted_edge_list = weighted_edge_list + onsite_loops
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edge_list)
