@@ -5,9 +5,9 @@ import numpy as np
 from typing import List, Tuple, Union
 
 class Lattice:
-    # edge に重複があってはいけないとする方がわかりやすい
+    # edge に重複があってはいけないとする方がわかりやすい?
     def __init__(self, graph:retworkx.PyGraph):
-        if graph.edges() == [None]*graph.num_edges(): # initialize the weights as 1.0 when graph does not have weights
+        if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
             weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
             for start, end, weight in weighted_edges:
                 graph.update_edge(start, end, weight)
@@ -30,7 +30,7 @@ class Lattice:
         return self._graph.weighted_edge_list()
 
     @classmethod
-    def from_hopping_matrix(cls, hopping_matrix:np.ndarray) -> "Lattice": # complex matrices are not allowed
+    def from_hopping_matrix(cls, hopping_matrix:np.ndarray) -> "Lattice": # hopping matrix に複素行列は入れられない(from_adjacencyの仕様)
         """returns an instance of Lattice from a given hopping_matrix
         """
         graph  = retworkx.PyGraph.from_adjacency_matrix(hopping_matrix)
@@ -47,9 +47,6 @@ class Lattice:
 
     def to_hopping_matrix(self) -> np.ndarray:
         """returns the hopping matrix from weighted edges
-
-        Returns:
-            np.ndarray: hopping matrix
         """
         hopping_matrix = np.zeros((self.num_nodes, self.num_nodes))
         for node_a, node_b, weight in self.weighted_edge_list:
@@ -61,17 +58,11 @@ class Lattice:
 
     def draw(self, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
         """draws a lattice
-
-        Args:
-            pos (dict, optional): [description]. Defaults to None.
-            ax (matplotlib.Axes, optional): [description]. Defaults to None.
-            arrows (bool, optional): [description]. Defaults to True.
-            with_labels (bool, optional): [description]. Defaults to False.
         """
         mpl_draw(self._graph, pos, ax, arrows, with_labels, **kwargs)
         plt.draw()
 
-class Line(Lattice):
+class LineLattice(Lattice):
     def __init__(
         self,
         num_nodes:int,
@@ -116,6 +107,17 @@ class SquareLattice(Lattice):
                 pass
 
 
+class TriangularLattice(Lattice):
+    pass
+
+class HexagonalLattice(Lattice):
+    pass
+
+class KagomeLattice(Lattice):
+    pass
+
+
+## 任意の並進対象な lattice も作れそう？
 class TranslationalSymLattice(Lattice):
     def __init__(self, dims:int, inner_nodes:int, sizes:list, unit_edge_list:list):
         pass
