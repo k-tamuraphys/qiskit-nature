@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import size
 import retworkx
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
