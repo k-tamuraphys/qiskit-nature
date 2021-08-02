@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import size
 import retworkx
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
@@ -82,31 +83,64 @@ class LineLattice(Lattice):
             pass
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
-        self_loops = [(i, i, onsite_potential) for i in range(num_nodes)]
-        weighted_edge_list = weighted_edge_list + self_loops
+        onsite_loops = [(i, i, onsite_potential) for i in range(num_nodes)]
+        weighted_edge_list = weighted_edge_list + onsite_loops
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edge_list)
         super().__init__(graph)
 class SquareLattice(Lattice):
     def __init__(
         self,
-        sizes:List[int],
+        size:List[int],
         hopping_parameter:List[float],
         onsite_potential:float,
         boundary_condition:List[str]
     ) -> "Lattice":
 
-        self.sizes = sizes
+        self.size = size
         self.boundary_conditions = boundary_condition
-        self.hopping_parameters = hopping_parameter,
-        self.onsite_potential = onsite_potential,
-        num_nodes = np.product(sizes)
+        self.hopping_parameters = hopping_parameter
+        self.onsite_potential = onsite_potential
+
+        num_nodes = np.product(size)
         graph = retworkx.PyGraph()
-        for x in range(sizes[0]):
-            for y in range(sizes[1]):
-                pass
+        weighted_edge_list = []
 
+        for x in range(size[0]):
+            for y in range(size[1]):
+                # x-direction
+                node_a = y*size[0] + x
+                if x == size[0] - 1:
+                    if boundary_condition[0] == "periodic":
+                        node_b = y*size[0]
+                        weighted_edge_list.append((node_a, node_b, hopping_parameter[0]))
+                    elif boundary_condition[0] == "open":
+                        pass
+                    else:
+                        raise ValueError(f"Invalid `boundary condition` {boundary_condition[0]} is given. `boundary condition` must be `open` or `periodic`.")
+                else:
+                    node_b = node_a + 1
+                    weighted_edge_list.append((node_a, node_b, hopping_parameter[0]))
+                
+                # y-direction
+                if y == size[1] - 1:
+                    if boundary_condition[1] == "periodic":
+                        node_b = x
+                        weighted_edge_list.append((node_a, node_b, hopping_parameter[1]))
+                    elif boundary_condition[1] == "open":
+                        pass
+                    else:
+                        raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
+                else:
+                    node_b = node_a + size[0]
+                    weighted_edge_list.append((node_a, node_b, hopping_parameter[1]))
 
+                # on-site potential
+                weighted_edge_list.append((node_a, node_a, onsite_potential))
+
+        graph.add_nodes_from(range(num_nodes))
+        graph.add_edges_from(weighted_edge_list)
+        super().__init__(graph)
 class TriangularLattice(Lattice):
     pass
 
