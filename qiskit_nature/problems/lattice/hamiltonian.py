@@ -1,112 +1,81 @@
 import lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
+import numpy as np
 
 class FermiHubbard:
-    def __init__(self, lattice:lattice.Lattice, onsite_int:float):
-        self.lattice = lattice
-        self.onsite_int = onsite_int
-        
-    def generator(self) -> FermionicOp:
-        """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
-
+    def __init__(self, lattice:lattice.Lattice, onsite_interaction:float):
+        """
         Args:
-            lattice (lattice.Lattice): lattice with weighted edges
-            onsite_int (float): parameter of the on-site interaction
+            lattice (lattice.Lattice): lattice geometry on which the model is defined
+            onsite_interaction (float): the strength of the on-site interaction
+        """
+        self._lattice = lattice # lattice を後から変えることは想定しない
+        self.onsite_interaction = onsite_interaction
+    
+    @property
+    def lattice(self) -> lattice.Lattice:
+        return self._lattice
+    
+        
+    def hamiltonian(self) -> FermionicOp:
+        """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
 
         Returns:
             FermionicOp: Hamiltonian of the Fermi-Hubbard model
         """
-        kinetic_Ham = []
-        interaction_Ham = []
-        weighted_edge_list = self.lattice.weighted_edge_list
-        register_length = 2*self.lattice.num_nodes
+        kinetic_ham = []
+        interaction_ham = []
+        weighted_edge_list = self._lattice.weighted_edge_list
+        register_length = 2*self._lattice.num_nodes
         # kinetic terms
         for spin in range(2):
             for node_a, node_b, weight in weighted_edge_list: # edge に重複があってはいけない
                 if node_a == node_b:
                     index = 2*node_a + spin
-                    kinetic_Ham.append((f"N_{index}", weight))
+                    kinetic_ham.append((f"N_{index}", weight))
 
                 else:
                     if node_a < node_b:
                         index_left = 2*node_a + spin
                         index_right = 2*node_b + spin
-                        kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                        kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
+                        kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
+                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
                         #when weight is a complex value
                         #kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
                         #kinetic_Ham.append((f"-_{index_left} +_{index_right}", -np.conjugate(weight)))
                     elif node_a > node_b:
                         index_left = 2*node_b + spin
                         index_right = 2*node_a + spin
-                        kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                        kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
+                        kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
+                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
                         #when weight is a complex value
                         # kinetic_Ham.append((f"+_{index_left} -_{index_right}", np.conjugate(weight)))
                         # kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
 
         # on-site interaction terms
-        for node in self.lattice.nodes:
+        for node in self._lattice.nodes:
             index_up = 2*node
             index_down = 2*node + 1
-            interaction_Ham.append((f"N_{index_up} N_{index_down}", self.onsite_int))
+            interaction_ham.append((f"N_{index_up} N_{index_down}", self.onsite_int))
 
-        Ham = kinetic_Ham + interaction_Ham
+        ham = kinetic_ham + interaction_ham
         
-        return FermionicOp(Ham, register_length=register_length)
+        return FermionicOp(ham, register_length=register_length)
 
+    @classmethod
+    def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbard":
+        """returns the Hamiltonian of the Fermi-Hubbard model from the given hopping matrix and on-site interaction.
 
-def Fermi_Hubbard(lattice:lattice.Lattice, onsite_int:float) -> FermionicOp:
-    # ホッピング行列もオプショナルな引数として持たせていいかもしれない
-    # もしホッピング行列が与えられないのならばlattice側が持ってる重みをホッピング行列として扱う
-    # もしホッピング行列が与えられれば、それをホッピング行列として扱う（どういう形式のinputが適切？）例：[(0, 1, -1.0), (1, 1, 1.0), ...]
-    """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
+        Args:
+            hopping_matrix (np.ndarray): hopping matrix
+            onsite_interaction (float): the strength of the on-site interaction
 
-    Args:
-        lattice (lattice.Lattice): lattice with weighted edges
-        onsite_int (float): parameter of the on-site interaction
-
-    Returns:
-        FermionicOp: Hamiltonian of the Fermi-Hubbard model
-    """
-    kinetic_Ham = []
-    interaction_Ham = []
-    weighted_edge_list = lattice.weighted_edge_list
-    register_length = 2*lattice.num_nodes
-    # kinetic terms
-    for spin in range(2):
-        for node_a, node_b, weight in weighted_edge_list: # edge に重複があってはいけない
-            if node_a == node_b:
-                index = 2*node_a + spin
-                kinetic_Ham.append((f"N_{index}", weight))
-
-            else:
-                if node_a < node_b:
-                    index_left = 2*node_a + spin
-                    index_right = 2*node_b + spin
-                    kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                    kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
-                    #when weight is a complex value
-                    #kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                    #kinetic_Ham.append((f"-_{index_left} +_{index_right}", -np.conjugate(weight)))
-                    
-
-
-                elif node_a > node_b:
-                    index_left = 2*node_b + spin
-                    index_right = 2*node_a + spin
-                    kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                    kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
-                    #when weight is a complex value
-                    # kinetic_Ham.append((f"+_{index_left} -_{index_right}", np.conjugate(weight)))
-                    # kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
-
-                
-    # on-site interaction terms
-    for node in lattice.nodes:
-        index_up = 2*node
-        index_down = 2*node + 1
-        interaction_Ham.append((f"N_{index_up} N_{index_down}", onsite_int))
-
-    Ham = kinetic_Ham + interaction_Ham
-    return FermionicOp(Ham, register_length=register_length)
+        Returns:
+            FermiHubbard : Fermi-Hubbard model generated from the given hopping matrix and on-site interaction
+        """
+        shape = hopping_matrix.shape
+        if len(shape) == 2 and shape[0] == shape[1]:
+            lat = lattice.Lattice.from_hopping_matrix(hopping_matrix)
+            return cls(lat, onsite_interaction)
+        else:
+            raise ValueError(f"Invalid shape {shape} is given.")
