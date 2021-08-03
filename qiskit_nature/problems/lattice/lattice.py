@@ -1,4 +1,3 @@
-from numpy.core.fromnumeric import size
 import retworkx
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
@@ -31,10 +30,24 @@ class Lattice:
         return self._graph.weighted_edge_list()
 
     @classmethod
-    def from_hopping_matrix(cls, hopping_matrix:np.ndarray) -> "Lattice": # hopping matrix に複素行列は入れられない(from_adjacencyの仕様)
+    def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice": 
         """returns an instance of Lattice from a given hopping_matrix
         """
-        graph  = retworkx.PyGraph.from_adjacency_matrix(hopping_matrix)
+        
+        """
+        # from_adjacency_matrix を使う場合（正の重みしか載せられない）
+        graph  = retworkx.PyGraph.from_adjacency_matrix(adjacency_matrix)
+        return cls(graph)
+        """
+        col_length, row_length = adjacency_matrix.shape
+        graph = retworkx.PyGraph()
+        graph.add_nodes_from(range(col_length))
+        for source_index in range(col_length):
+            for target_index in range(source_index, row_length):
+                weight = adjacency_matrix[source_index, target_index]
+                if not weight == 0.0:
+                    graph.add_edge(source_index, target_index, weight)
+                    
         return cls(graph)
 
     @classmethod
@@ -46,16 +59,16 @@ class Lattice:
         graph.add_edges_from(weighted_edges)
         return cls(graph)
 
-    def to_hopping_matrix(self) -> np.ndarray:
+    def to_adjacency_matrix(self) -> np.ndarray:
         """returns the hopping matrix from weighted edges
         """
-        hopping_matrix = np.zeros((self.num_nodes, self.num_nodes))
+        adjacency_matrix = np.zeros((self.num_nodes, self.num_nodes), dtype=complex)
         for node_a, node_b, weight in self.weighted_edge_list:
             node_a, node_b = tuple(sorted([node_a, node_b]))
-            hopping_matrix[node_a, node_b] = weight
+            adjacency_matrix[node_a, node_b] = weight
 
-        hopping_matrix = hopping_matrix + np.triu(hopping_matrix, k=1).transpose()
-        return hopping_matrix
+        adjacency_matrix = adjacency_matrix + np.conjugate(np.triu(adjacency_matrix, k=1).T)
+        return adjacency_matrix
 
     def draw(self, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
         """draws a lattice
