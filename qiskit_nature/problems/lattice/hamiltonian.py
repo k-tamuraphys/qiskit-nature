@@ -75,7 +75,7 @@ class FermiHubbard:
         """returns the Hamiltonian of the Fermi-Hubbard model from the given hopping matrix and on-site interaction.
 
         Args:
-            hopping_matrix (np.ndarray): hopping matrix
+            hopping_matrix (np.ndarray): a real or complex valued square matrix
             onsite_interaction (float): the strength of the on-site interaction
 
         Returns:
