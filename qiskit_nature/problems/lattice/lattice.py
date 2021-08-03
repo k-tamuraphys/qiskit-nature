@@ -5,7 +5,7 @@ import numpy as np
 from typing import List, Tuple, Union
 
 class Lattice:
-    # edge に重複があってはいけないとする方がわかりやすい?
+    # edge に重複があってはいけないとする方がわかりやすい?（multigraph=Falseの方がいい？）
     def __init__(self, graph:retworkx.PyGraph):
         if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
             weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
@@ -80,7 +80,7 @@ class LineLattice(Lattice):
     def __init__(
         self,
         num_nodes:int,
-        hopping_parameter:float,
+        hopping_parameter:Union[float, complex],
         onsite_potential:float,
         boundary_condition:str
     ) -> "Lattice":
@@ -105,7 +105,7 @@ class SquareLattice(Lattice):
     def __init__(
         self,
         size:List[int],
-        hopping_parameter:List[float],
+        hopping_parameter:List[Union[float, complex]],
         onsite_potential:float,
         boundary_condition:List[str]
     ) -> "Lattice":
