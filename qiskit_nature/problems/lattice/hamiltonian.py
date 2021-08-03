@@ -15,6 +15,14 @@ class FermiHubbard:
     @property
     def lattice(self) -> lattice.Lattice:
         return self._lattice
+
+    def hopping_matrix(self) -> np.ndarray:
+        """returns the hopping matrix
+
+        Returns:
+            np.ndarray: hopping matrix
+        """
+        return self._lattice.to_adjacency_matrix()
     
         
     def hamiltonian(self) -> FermionicOp:
@@ -38,25 +46,25 @@ class FermiHubbard:
                     if node_a < node_b:
                         index_left = 2*node_a + spin
                         index_right = 2*node_b + spin
-                        kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
-                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
+                        #kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
+                        #kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
                         #when weight is a complex value
-                        #kinetic_Ham.append((f"+_{index_left} -_{index_right}", weight))
-                        #kinetic_Ham.append((f"-_{index_left} +_{index_right}", -np.conjugate(weight)))
+                        kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
+                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -np.conjugate(weight)))
                     elif node_a > node_b:
                         index_left = 2*node_b + spin
                         index_right = 2*node_a + spin
-                        kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
-                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
+                        #kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
+                        #kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
                         #when weight is a complex value
-                        # kinetic_Ham.append((f"+_{index_left} -_{index_right}", np.conjugate(weight)))
-                        # kinetic_Ham.append((f"-_{index_left} +_{index_right}", -weight))
+                        kinetic_ham.append((f"+_{index_left} -_{index_right}", np.conjugate(weight)))
+                        kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
 
         # on-site interaction terms
         for node in self._lattice.nodes:
             index_up = 2*node
             index_down = 2*node + 1
-            interaction_ham.append((f"N_{index_up} N_{index_down}", self.onsite_int))
+            interaction_ham.append((f"N_{index_up} N_{index_down}", self.onsite_interaction))
 
         ham = kinetic_ham + interaction_ham
         
@@ -75,7 +83,7 @@ class FermiHubbard:
         """
         shape = hopping_matrix.shape
         if len(shape) == 2 and shape[0] == shape[1]:
-            lat = lattice.Lattice.from_hopping_matrix(hopping_matrix)
+            lat = lattice.Lattice.from_adjacency_matrix(hopping_matrix)
             return cls(lat, onsite_interaction)
         else:
             raise ValueError(f"Invalid shape {shape} is given.")
