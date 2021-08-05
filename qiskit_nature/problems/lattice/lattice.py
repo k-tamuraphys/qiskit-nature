@@ -7,11 +7,14 @@ from typing import List, Tuple, Union
 class Lattice:
     # edge に重複があってはいけないとする方がわかりやすい?（multigraph=Falseの方がいい？）
     def __init__(self, graph:retworkx.PyGraph):
-        if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
-            weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
-            for start, end, weight in weighted_edges:
-                graph.update_edge(start, end, weight)
-        self._graph = graph
+        if not graph.multigraph:
+            if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
+                weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
+                for start, end, weight in weighted_edges:
+                    graph.update_edge(start, end, weight)
+            self._graph = graph
+        else:
+            raise ValueError(f"Invalid `multigraph` {graph.multigraph} is given. `multigraph` must be `False`.")
 
     @property
     def graph(self) -> retworkx.PyGraph:
@@ -35,12 +38,12 @@ class Lattice:
         """
         
         """
-        # from_adjacency_matrix を使う場合（正の重みしか載せられない）
+        # from_adjacency_matrix を使う場合（正の重みしか載せられない, floatしか載せられない）
         graph  = retworkx.PyGraph.from_adjacency_matrix(adjacency_matrix)
         return cls(graph)
         """
         col_length, row_length = adjacency_matrix.shape
-        graph = retworkx.PyGraph()
+        graph = retworkx.PyGraph(multigraph=False)
         graph.add_nodes_from(range(col_length))
         for source_index in range(col_length):
             for target_index in range(source_index, row_length):
@@ -54,7 +57,7 @@ class Lattice:
     def from_nodes_edges(cls, num_nodes, weighted_edges) -> "Lattice":
         """returns an instance of Lattice from the number of nodes and the list of edges
         """
-        graph = retworkx.PyGraph()
+        graph = retworkx.PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edges)
         return cls(graph)
@@ -80,23 +83,23 @@ class LineLattice(Lattice):
     def __init__(
         self,
         num_nodes:int,
-        hopping_parameter:Union[float, complex],
-        onsite_potential:float,
-        boundary_condition:str
+        edge_parameter:complex = 1.0,
+        onsite_parameter:complex = 0.0,
+        boundary_condition:str = "open"
     ) -> "Lattice":
         
-        self.hopping_parameter = hopping_parameter
-        self.onsite_potential = onsite_potential
+        self.edge_parameter = edge_parameter
+        self.onsite_parameter = onsite_parameter
         self.boundary_condition = boundary_condition
-        graph = retworkx.PyGraph()
-        weighted_edge_list = [(i, i+1, hopping_parameter) for i in range(num_nodes-1)]
-        if boundary_condition == "periodic":
-            weighted_edge_list.append((num_nodes-1, 0, hopping_parameter))
-        elif boundary_condition == "open":
+        graph = retworkx.PyGraph(multigraph=False)
+        weighted_edge_list = [(i, i+1, edge_parameter) for i in range(num_nodes-1)]
+        if boundary_condition == "open":
             pass
+        elif boundary_condition == "periodic":
+            weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
-        onsite_loops = [(i, i, onsite_potential) for i in range(num_nodes)]
+        onsite_loops = [(i, i, onsite_parameter) for i in range(num_nodes)]
         weighted_edge_list = weighted_edge_list + onsite_loops
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edge_list)
@@ -104,60 +107,94 @@ class LineLattice(Lattice):
 class SquareLattice(Lattice):
     def __init__(
         self,
-        size:List[int],
-        hopping_parameter:List[Union[float, complex]],
-        onsite_potential:float,
-        boundary_condition:List[str]
+        rows:int, # length of x-direction
+        cols:int, # length of y-direction
+        edge_parameter:Union[complex, Tuple[complex, complex]] = 1.0,
+        onsite_parameter:complex = 0.0,
+        boundary_condition:Tuple[str, str] = ("open", "open")
     ) -> "Lattice":
 
-        self.size = size
+        self.rows = rows
+        self.cols = cols
         self.boundary_conditions = boundary_condition
-        self.hopping_parameters = hopping_parameter
-        self.onsite_potential = onsite_potential
+        
+        if isinstance(edge_parameter, (int, float, complex)):
+            edge_parameter = (edge_parameter, edge_parameter)
+        elif isinstance(edge_parameter, tuple) and len(edge_parameter) == 2:
+            pass
+        else:
+            raise TypeError(f"Type of `edge parameter` must be int, float, complex, or tuple of length 2, not {type(edge_parameter)}.")
 
-        num_nodes = np.product(size)
-        graph = retworkx.PyGraph()
-        weighted_edge_list = []
+        self.edge_parameter = edge_parameter
 
-        for x in range(size[0]):
-            for y in range(size[1]):
+        self.onsite_parameter = onsite_parameter
+
+        num_nodes = np.product([rows, cols])
+        graph = retworkx.PyGraph(multigraph=False)
+        graph.add_nodes_from(range(num_nodes))
+
+        for x in range(rows-1):
+            for y in range(cols-1):
+                node_a = y*rows + x
                 # x-direction
-                node_a = y*size[0] + x
-                if x == size[0] - 1:
-                    if boundary_condition[0] == "periodic":
-                        node_b = y*size[0]
-                        weighted_edge_list.append((node_a, node_b, hopping_parameter[0]))
-                    elif boundary_condition[0] == "open":
-                        pass
-                    else:
-                        raise ValueError(f"Invalid `boundary condition` {boundary_condition[0]} is given. `boundary condition` must be `open` or `periodic`.")
-                else:
-                    node_b = node_a + 1
-                    weighted_edge_list.append((node_a, node_b, hopping_parameter[0]))
-                
+                node_b = node_a + 1
+                graph.add_edge(node_a, node_b, edge_parameter[0])
                 # y-direction
-                if y == size[1] - 1:
-                    if boundary_condition[1] == "periodic":
-                        node_b = x
-                        weighted_edge_list.append((node_a, node_b, hopping_parameter[1]))
-                    elif boundary_condition[1] == "open":
-                        pass
-                    else:
-                        raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
-                else:
-                    node_b = node_a + size[0]
-                    weighted_edge_list.append((node_a, node_b, hopping_parameter[1]))
+                node_b = node_a + rows
+                graph.add_edge(node_a, node_b, edge_parameter[1])
 
                 # on-site potential
-                weighted_edge_list.append((node_a, node_a, onsite_potential))
+                graph.add_edge(node_a, node_a, onsite_parameter)
+        
+        # boundary(top)
+        for x in range(rows-1):
+            node_a = rows*(cols-1) + x
+            node_b = node_a + 1
+            graph.add_edge(node_a, node_b, edge_parameter[0])
 
-        graph.add_nodes_from(range(num_nodes))
-        graph.add_edges_from(weighted_edge_list)
+        # boundary(right)
+        for y in range(cols-1):
+            node_a = (y+1)*rows - 1
+            node_b = node_a + rows
+            graph.add_edge(node_a, node_b, edge_parameter[1])
+
+        #boundary condition(x)
+        if boundary_condition[0] == "open":
+            pass
+        elif boundary_condition[0] == "periodic":
+            for y in range(cols):
+                node_a = (y+1)*rows - 1
+                node_b = node_a - (rows-1)
+                graph.add_edge(node_a, node_b, edge_parameter[0])
+        else:
+            raise ValueError(f"Invalid `boundary condition` {boundary_condition[0]} is given. `boundary condition` must be `open` or `periodic`.")
+
+        #boundary condition(y)
+        if boundary_condition[1] == "open":
+            pass
+        elif boundary_condition[1] == "periodic":
+            for x in range(rows):
+                node_a = rows*(cols-1) + x
+                node_b = node_a % rows
+                graph.add_edge(node_a, node_b, edge_parameter[1])
+        else:
+            raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
+                    
+                
+        
         super().__init__(graph)
 class TriangularLattice(Lattice):
-    pass
+    def __init__(
+        self,
+        size:List[int],
+        edge_parameter:List[Union[float, complex]],
+        onsite_parameter:float,
+        boundary_conditioin:List[str]
+    ) -> "Lattice":
+        pass
 
 class HexagonalLattice(Lattice):
+    # 境界条件?
     pass
 
 class KagomeLattice(Lattice):
@@ -165,6 +202,13 @@ class KagomeLattice(Lattice):
 
 
 ## 任意の並進対象な lattice も作れそう？
+## hexiagonal の例などを考えると、 node と edge を remove できる仕組みがあると良い
 class TranslationalSymLattice(Lattice):
-    def __init__(self, dims:int, inner_nodes:int, sizes:list, unit_edge_list:list):
-        pass
+    def __init__(
+        self, 
+        size:List[Union[float, complex]],
+        num_nodes_in_unitcell:int,
+        weighted_edge_in_unitcell:List[Tuple]
+    ) -> "Lattice":
+        self.dim = len(size)
+    
