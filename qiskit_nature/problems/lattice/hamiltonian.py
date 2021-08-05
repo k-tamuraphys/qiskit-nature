@@ -14,7 +14,7 @@ class FermiHubbard:
     
     @property
     def lattice(self) -> lattice.Lattice:
-        return self._lattice
+        return self._lattice #copy を返す
 
     def hopping_matrix(self) -> np.ndarray:
         """returns the hopping matrix
@@ -25,7 +25,7 @@ class FermiHubbard:
         return self._lattice.to_adjacency_matrix()
     
         
-    def hamiltonian(self) -> FermionicOp:
+    def hamiltonian(self) -> FermionicOp: #他のモジュールに合わせた名前
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
 
         Returns:
