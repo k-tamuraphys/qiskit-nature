@@ -14,7 +14,7 @@ class FermiHubbard:
     
     @property
     def lattice(self) -> lattice.Lattice:
-        return self._lattice #copy を返す
+        return (self._lattice).copy() #copy を返す
 
     def hopping_matrix(self) -> np.ndarray:
         """returns the hopping matrix
@@ -46,17 +46,11 @@ class FermiHubbard:
                     if node_a < node_b:
                         index_left = 2*node_a + spin
                         index_right = 2*node_b + spin
-                        #kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
-                        #kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
-                        #when weight is a complex value
                         kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
                         kinetic_ham.append((f"-_{index_left} +_{index_right}", -np.conjugate(weight)))
                     elif node_a > node_b:
                         index_left = 2*node_b + spin
                         index_right = 2*node_a + spin
-                        #kinetic_ham.append((f"+_{index_left} -_{index_right}", weight))
-                        #kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
-                        #when weight is a complex value
                         kinetic_ham.append((f"+_{index_left} -_{index_right}", np.conjugate(weight)))
                         kinetic_ham.append((f"-_{index_left} +_{index_right}", -weight))
 
