@@ -36,16 +36,16 @@ class Lattice:
     def copy(self) -> "Lattice":
         return copy.copy(self)
 
+    
     @classmethod
-    def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice": 
+    def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice":
         """returns an instance of Lattice from a given hopping_matrix
         """
-        
         """
         # from_adjacency_matrix を使う場合（正の重みしか載せられない, floatしか載せられない）
         graph  = retworkx.PyGraph.from_adjacency_matrix(adjacency_matrix)
-        return cls(graph)
         """
+        
         col_length, row_length = adjacency_matrix.shape
         graph = retworkx.PyGraph(multigraph=False)
         graph.add_nodes_from(range(col_length))
@@ -58,7 +58,7 @@ class Lattice:
         return cls(graph)
 
     @classmethod
-    def from_nodes_edges(cls, num_nodes, weighted_edges) -> "Lattice":
+    def from_nodes_edges(cls, num_nodes:int, weighted_edges:list) -> "Lattice":
         """returns an instance of Lattice from the number of nodes and the list of edges
         """
         graph = retworkx.PyGraph(multigraph=False)
@@ -108,6 +108,13 @@ class LineLattice(Lattice):
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edge_list)
         super().__init__(graph)
+
+    
+    @classmethod
+    def from_adjacency_matrix(cls, adjacency_matrix: np.ndarray) -> "Lattice":
+        # 1次元系に適しているかのチェック？
+        return Lattice.from_adjacency_matrix(adjacency_matrix)
+        
 class SquareLattice(Lattice):
     def __init__(
         self,
@@ -122,7 +129,7 @@ class SquareLattice(Lattice):
         self.cols = cols
 
         if isinstance(boundary_condition, str):
-            boundary_condition = [boundary_condition, boundary_condition]
+            boundary_condition = (boundary_condition, boundary_condition)
         elif isinstance(boundary_condition, tuple):
             pass
         else:
@@ -197,7 +204,6 @@ class SquareLattice(Lattice):
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
                     
-                
         super().__init__(graph)
 class TriangularLattice(Lattice):
     def __init__(
