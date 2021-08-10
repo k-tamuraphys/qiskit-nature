@@ -1,19 +1,19 @@
-import lattice
+from lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
 
 class FermiHubbard:
-    def __init__(self, lattice:lattice.Lattice, onsite_interaction:float):
+    def __init__(self, lattice:Lattice, onsite_interaction:float):
         """
         Args:
-            lattice (lattice.Lattice): lattice geometry on which the model is defined
-            onsite_interaction (float): the strength of the on-site interaction
+            lattice : lattice geometry on which the model is defined
+            onsite_interaction : the strength of the on-site interaction
         """
         self._lattice = lattice # lattice を後から変えることは想定しない
         self.onsite_interaction = onsite_interaction
     
     @property
-    def lattice(self) -> lattice.Lattice:
+    def lattice(self) -> Lattice:
         return (self._lattice).copy() 
 
     def hopping_matrix(self) -> np.ndarray:
@@ -77,7 +77,7 @@ class FermiHubbard:
         """
         shape = hopping_matrix.shape
         if len(shape) == 2 and shape[0] == shape[1]:
-            lat = lattice.Lattice.from_adjacency_matrix(hopping_matrix)
+            lat = Lattice.from_adjacency_matrix(hopping_matrix)
             return cls(lat, onsite_interaction)
         else:
             raise ValueError(f"Invalid shape {shape} is given.")
