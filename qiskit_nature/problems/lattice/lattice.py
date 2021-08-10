@@ -1,4 +1,4 @@
-import retworkx
+from retworkx import PyGraph, NodeIndices
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +7,7 @@ import copy
 
 class Lattice:
     # multigraph=Falseを想定
-    def __init__(self, graph:retworkx.PyGraph):
+    def __init__(self, graph:PyGraph):
         if not graph.multigraph:
             if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
                 weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
@@ -18,15 +18,15 @@ class Lattice:
             raise ValueError(f"Invalid `multigraph` {graph.multigraph} is given. `multigraph` must be `False`.")
 
     @property
-    def graph(self) -> retworkx.PyGraph:
-        return self._graph
+    def graph(self) -> PyGraph:
+        return self._graph 
 
     @property
     def num_nodes(self) -> int:
         return self._graph.num_nodes()
 
     @property
-    def nodes(self) -> retworkx.NodeIndices:
+    def nodes(self) -> NodeIndices:
         return self._graph.node_indexes()
     
     @property
@@ -43,11 +43,11 @@ class Lattice:
         """
         """
         # from_adjacency_matrix を使う場合（正の重みしか載せられない, floatしか載せられない）
-        graph  = retworkx.PyGraph.from_adjacency_matrix(adjacency_matrix)
+        graph  = PyGraph.from_adjacency_matrix(adjacency_matrix)
         """
         
         col_length, row_length = adjacency_matrix.shape
-        graph = retworkx.PyGraph(multigraph=False)
+        graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(col_length))
         for source_index in range(col_length):
             for target_index in range(source_index, row_length):
@@ -58,10 +58,10 @@ class Lattice:
         return cls(graph)
 
     @classmethod
-    def from_nodes_edges(cls, num_nodes:int, weighted_edges:list) -> "Lattice":
+    def from_nodes_edges(cls, num_nodes:int, weighted_edges:List[Tuple]) -> "Lattice":
         """returns an instance of Lattice from the number of nodes and the list of edges
         """
-        graph = retworkx.PyGraph(multigraph=False)
+        graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edges)
         return cls(graph)
@@ -95,7 +95,7 @@ class LineLattice(Lattice):
         self.edge_parameter = edge_parameter
         self.onsite_parameter = onsite_parameter
         self.boundary_condition = boundary_condition
-        graph = retworkx.PyGraph(multigraph=False)
+        graph = PyGraph(multigraph=False)
         weighted_edge_list = [(i, i+1, edge_parameter) for i in range(num_nodes-1)]
         if boundary_condition == "open":
             pass
@@ -149,7 +149,7 @@ class SquareLattice(Lattice):
         self.onsite_parameter = onsite_parameter
 
         num_nodes = np.product([rows, cols])
-        graph = retworkx.PyGraph(multigraph=False)
+        graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
 
         for x in range(rows-1):
@@ -229,7 +229,7 @@ class TriangularLattice(Lattice):
         self.onsite_parameter = onsite_parameter
 
         num_nodes = np.product([rows, cols])
-        graph = retworkx.PyGraph(multigraph=False)
+        graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
 
         for x in range(rows-1):
