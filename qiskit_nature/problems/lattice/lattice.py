@@ -3,13 +3,12 @@ from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Tuple, Union
-import copy
 
 class Lattice:
-    # multigraph=Falseを想定
+    # multigraph=False is assumed
     def __init__(self, graph:PyGraph):
         if not graph.multigraph:
-            if graph.edges() == [None]*graph.num_edges(): # weight がない時は 1.0 に初期化
+            if graph.edges() == [None]*graph.num_edges(): # If weights are None, initialize as 1.0
                 weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
                 for start, end, weight in weighted_edges:
                     graph.update_edge(start, end, weight)
@@ -34,16 +33,17 @@ class Lattice:
         return self._graph.weighted_edge_list()
     
     def copy(self) -> "Lattice":
-        return copy.copy(self)
+        return Lattice(self._graph.copy())
 
     
     @classmethod
     def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice":
         """returns an instance of Lattice from a given hopping_matrix
-        """
-        """
-        # from_adjacency_matrix を使う場合（正の重みしか載せられない, floatしか載せられない）
-        graph  = PyGraph.from_adjacency_matrix(adjacency_matrix)
+        Args:
+            adjacency_matrix: adjacency_matrix with real or complex matrix elements
+
+        Returns:
+            Lattice made from a given adjacency_matrix
         """
         
         col_length, row_length = adjacency_matrix.shape
@@ -58,7 +58,7 @@ class Lattice:
         return cls(graph)
 
     @classmethod
-    def from_nodes_edges(cls, num_nodes:int, weighted_edges:List[Tuple]) -> "Lattice":
+    def from_nodes_edges(cls, num_nodes:int, weighted_edges:List[Tuple[int, int, complex]]) -> "Lattice":
         """returns an instance of Lattice from the number of nodes and the list of edges
         """
         graph = PyGraph(multigraph=False)
@@ -120,8 +120,8 @@ class SquareLattice(Lattice):
         self,
         rows:int, # length of x-direction
         cols:int, # length of y-direction
-        edge_parameter:Union[complex, Tuple[complex, complex]] = 1.0,
-        onsite_parameter:complex = 0.0,
+        edge_parameter:Union[complex, Tuple[complex, complex]] = 1.0, #0の時にエッジが無視されない！
+        onsite_parameter:complex = 0.0, # 0の時にエッジが無視されない！
         boundary_condition:Union[str, Tuple[str, str]] = "open"
     ) -> "Lattice":
 
