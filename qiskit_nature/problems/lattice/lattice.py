@@ -77,11 +77,22 @@ class Lattice:
         adjacency_matrix = adjacency_matrix + np.conjugate(np.triu(adjacency_matrix, k=1).T)
         return adjacency_matrix
 
-    def draw(self, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
+    def draw(self, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
         """draws a lattice
+        Args:
+            self_loop: draw self-loops in a lattice
         """
-        mpl_draw(self._graph, pos, ax, arrows, with_labels, **kwargs)
-        plt.draw()
+        if self_loop == True:
+            mpl_draw(self._graph, pos, ax, arrows, with_labels, **kwargs)
+            plt.draw()
+        elif self_loop == False:
+            graph_no_loop = self._graph.copy()
+            self_loops = [(i, i) for i in range(self.num_nodes) if graph_no_loop.has_edge(i, i)]
+            graph_no_loop.remove_edges_from(self_loops)
+            mpl_draw(graph_no_loop, pos, ax, arrows, with_labels, **kwargs)
+            plt.draw()
+        else:
+            raise ValueError({f"Invalid value for self_loop is given: {self_loop}"})
 
 class LineLattice(Lattice):
     def __init__(
