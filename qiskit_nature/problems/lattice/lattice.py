@@ -3,7 +3,6 @@ from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Tuple, Union
-import copy
 
 class Lattice:
     # multigraph=False is assumed
