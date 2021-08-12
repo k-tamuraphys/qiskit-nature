@@ -25,8 +25,10 @@ class FermiHubbard:
         return self.lattice.to_adjacency_matrix()
     
         
-    def hamiltonian(self) -> FermionicOp: #他のモジュールに合わせた名前
+    def second_q_ops(self, sparse_label:bool = False) -> FermionicOp: #他のモジュールに合わせた名前
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
+        Args:
+        sparse_label:the label is represented by sparse mode.
 
         Returns:
             FermionicOp: Hamiltonian of the Fermi-Hubbard model
@@ -62,7 +64,7 @@ class FermiHubbard:
 
         ham = kinetic_ham + interaction_ham
         
-        return FermionicOp(ham, register_length=register_length)
+        return FermionicOp(ham, register_length=register_length, sparse_label=sparse_label)
 
     @classmethod
     def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbard":
