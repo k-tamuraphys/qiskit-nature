@@ -20,7 +20,7 @@ class FermiHubbard:
         """returns the hopping matrix
 
         Returns:
-            np.ndarray: hopping matrix
+            hopping matrix
         """
         return self.lattice.to_adjacency_matrix()
     
