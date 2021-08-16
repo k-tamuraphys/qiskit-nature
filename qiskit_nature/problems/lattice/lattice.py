@@ -1,5 +1,4 @@
-from numpy.lib.type_check import real
-from retworkx import PyGraph, NodeIndices, adjacency_matrix
+from retworkx import PyGraph, NodeIndices, adjacency_matrix, WeightedEdgeList
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +8,7 @@ class Lattice:
     # multigraph=False is assumed
     def __init__(self, graph:PyGraph):
         if not graph.multigraph:
-            if graph.edges() == [None]*graph.num_edges(): # If weights are None, initialize as 1.0
+            if graph.edges() == [None]*graph.num_edges(): # If weights are None, initialized as 1.0
                 weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
                 for start, end, weight in weighted_edges:
                     graph.update_edge(start, end, weight)
@@ -30,7 +29,7 @@ class Lattice:
         return self._graph.node_indexes()
     
     @property
-    def weighted_edge_list(self) -> int:
+    def weighted_edge_list(self) -> WeightedEdgeList:
         return self._graph.weighted_edge_list()
     
     def copy(self) -> "Lattice":
@@ -218,9 +217,9 @@ class SquareLattice(Lattice):
                     
         super().__init__(graph)
 
-        @classmethod
-        def from_adjacency_matrix(cls):
-            raise NotImplementedError()
+    @classmethod
+    def from_adjacency_matrix(cls):
+        raise NotImplementedError()
 class TriangularLattice(Lattice):
     def __init__(
         self,
@@ -317,25 +316,18 @@ class TriangularLattice(Lattice):
 
         super().__init__(graph)
 
-        @classmethod
-        def from_adjacency_matrix(cls):
-            raise NotImplementedError()
+    @classmethod
+    def from_adjacency_matrix(cls):
+        raise NotImplementedError()
+"""
 class HexagonalLattice(Lattice):
-    # 境界条件?
+    # boundary condition -> "open", "periodic", "irregular?"
     pass
 
 class KagomeLattice(Lattice):
     pass
 
-
-## 任意の並進対象な lattice も作れそう？
-## hexiagonal の例などを考えると、 node と edge を remove できる仕組みがあると良い
-class TranslationalSymLattice(Lattice):
-    def __init__(
-        self, 
-        size:List[Union[float, complex]],
-        num_nodes_in_unitcell:int,
-        weighted_edge_in_unitcell:List[Tuple]
-    ) -> "Lattice":
-        self.dim = len(size)
-    
+# hyperrectangle lattice in arbitrary d-dimension
+class Hyperrectangle(Lattice):
+    pass
+"""
