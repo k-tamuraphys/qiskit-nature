@@ -107,14 +107,19 @@ class LineLattice(Lattice):
         self.onsite_parameter = onsite_parameter
         self.boundary_condition = boundary_condition
         graph = PyGraph(multigraph=False)
-        weighted_edge_list = [(i, i+1, edge_parameter) for i in range(num_nodes-1)]
+        if edge_parameter != 0.0:
+            weighted_edge_list = [(i, i+1, edge_parameter) for i in range(num_nodes-1)]
+        
         if boundary_condition == "open":
             pass
         elif boundary_condition == "periodic":
-            weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
+            if edge_parameter != 0.0:
+                weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
-        onsite_loops = [(i, i, onsite_parameter) for i in range(num_nodes)]
+        if onsite_parameter != 0.0:
+            onsite_loops = [(i, i, onsite_parameter) for i in range(num_nodes)]
+        
         weighted_edge_list = weighted_edge_list + onsite_loops
         graph.add_nodes_from(range(num_nodes))
         graph.add_edges_from(weighted_edge_list)
@@ -123,7 +128,7 @@ class LineLattice(Lattice):
     
     @classmethod
     def from_adjacency_matrix(cls, adjacency_matrix: np.ndarray) -> "Lattice":
-        # 1次元系に適しているかのチェック？
+        # check if the matrix is appropriate foe a one-dimensional lattice -> Not Implemented Error?
         return Lattice.from_adjacency_matrix(adjacency_matrix)
         
 class SquareLattice(Lattice):
@@ -163,44 +168,40 @@ class SquareLattice(Lattice):
         graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
 
-        for x in range(rows-1):
-            for y in range(cols-1):
-                node_a = y*rows + x
-                # x-direction
-                node_b = node_a + 1
-                graph.add_edge(node_a, node_b, edge_parameter[0])
-                # y-direction
-                node_b = node_a + rows
-                graph.add_edge(node_a, node_b, edge_parameter[1])
+        # x direction
+        if edge_parameter[0] != 0.0:
+            for x in range(rows-1):
+                for y in range(cols):
+                    node_a = y*rows + x
+                    node_b = node_a + 1
+                    graph.add_edge(node_a, node_b, edge_parameter[0])
 
-                # on-site potential
-                graph.add_edge(node_a, node_a, onsite_parameter)
         
-        # boundary(top)
-        for x in range(rows-1):
-            node_a = rows*(cols-1) + x
-            node_b = node_a + 1
-            graph.add_edge(node_a, node_b, edge_parameter[0])
-            graph.add_edge(node_a, node_a, onsite_parameter)
-
-        # boundary(right)
-        for y in range(cols-1):
-            node_a = (y+1)*rows - 1
-            node_b = node_a + rows
-            graph.add_edge(node_a, node_b, edge_parameter[1])
-            graph.add_edge(node_a, node_a, onsite_parameter)
-        
-        graph.add_edge(rows*cols-1, rows*cols-1, onsite_parameter)
-        
+        # y direction
+        if edge_parameter[1] != 0.0:
+            for x in range(rows):
+                for y in range(cols-1):
+                    node_a = y*rows + x
+                    node_b = node_a + rows
+                    graph.add_edge(node_a, node_b, edge_parameter[1])
+            
+        # self loop
+        if onsite_parameter != 0.0:
+            for x in range(rows):
+                for y in range(cols):
+                    node_a = y*rows + x
+                    graph.add_edge(node_a, node_a, onsite_parameter)
+                
 
         #boundary condition(x)
         if boundary_condition[0] == "open":
             pass
         elif boundary_condition[0] == "periodic":
-            for y in range(cols):
-                node_a = (y+1)*rows - 1
-                node_b = node_a - (rows-1)
-                graph.add_edge(node_a, node_b, edge_parameter[0])
+            if edge_parameter[0] != 0.0:
+                for y in range(cols):
+                    node_a = (y+1)*rows - 1
+                    node_b = node_a - (rows-1)
+                    graph.add_edge(node_a, node_b, edge_parameter[0])
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[0]} is given. `boundary condition` must be `open` or `periodic`.")
 
@@ -208,10 +209,11 @@ class SquareLattice(Lattice):
         if boundary_condition[1] == "open":
             pass
         elif boundary_condition[1] == "periodic":
-            for x in range(rows):
-                node_a = rows*(cols-1) + x
-                node_b = node_a % rows
-                graph.add_edge(node_a, node_b, edge_parameter[1])
+            if edge_parameter[1] != 0.0:
+                for x in range(rows):
+                    node_a = rows*(cols-1) + x
+                    node_b = node_a % rows
+                    graph.add_edge(node_a, node_b, edge_parameter[1])
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
                     
@@ -243,58 +245,69 @@ class TriangularLattice(Lattice):
         graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
 
-        for x in range(rows-1):
-            for y in range(cols-1):
-                node_a = y*rows + x
-                node_b = node_a + 1
-                graph.add_edge(node_a, node_b, edge_parameter[0])
-                node_b = node_a + rows
-                graph.add_edge(node_a, node_b, edge_parameter[1])
-                node_b = node_a + 1 + rows
-                graph.add_edge(node_a, node_b, edge_parameter[2])
-                graph.add_edge(node_a, node_a, onsite_parameter)
+        # x direction
+        if edge_parameter[0] != 0.0:
+            for x in range(rows-1):
+                for y in range(cols):
+                    node_a = y*rows + x
+                    node_b = node_a + 1
+                    graph.add_edge(node_a, node_b, edge_parameter[0])
 
-        # boundary(top)
-        for x in range(rows-1):
-            node_a = rows*(cols-1) + x
-            node_b = node_a + 1
-            graph.add_edge(node_a, node_b, edge_parameter[0])
-            graph.add_edge(node_a, node_a, onsite_parameter)
+        # y direction
+        if edge_parameter[1] != 0.0:
+            for x in range(rows):
+                for y in range(cols-1):
+                    node_a = y*rows + x
+                    node_b = node_a + rows
+                    graph.add_edge(node_a, node_b, edge_parameter[1])
 
-        # boundary(right)
-        for y in range(cols-1):
-            node_a = (y+1)*rows - 1
-            node_b = node_a + rows
-            graph.add_edge(node_a, node_b, edge_parameter[1])
-            graph.add_edge(node_a, node_a, onsite_parameter)
+        # diagonal direction
+        if edge_parameter[2] != 0.0:
+            for x in range(rows-1):
+                for y in range(cols-1):
+                    node_a = y*rows + x
+                    node_b = node_a + 1 + rows
+                    graph.add_edge(node_a, node_b, edge_parameter[2])
 
-        graph.add_edge(rows*cols-1, rows*cols-1, onsite_parameter)
+        # self loop
+        if onsite_parameter != 0.0:
+            for x in range(rows):
+                for y in range(cols):
+                    node_a = y*rows + x
+                    graph.add_edge(node_a, node_a, onsite_parameter)
+
 
         #boundary condition
         if boundary_condition == "open":
             pass
         elif boundary_condition == "periodic":
-            for y in range(cols-1):
-                node_a = (y+1)*rows - 1
-                node_b = node_a - (rows-1)
-                graph.add_edge(node_a, node_b, edge_parameter[0])
-                node_b = node_a - (rows-1) +rows
-                graph.add_edge(node_a, node_b, edge_parameter[2])
+            # x direction
+            if edge_parameter[0] != 0.0:
+                for y in range(cols):
+                    node_a = (y+1)*rows - 1
+                    node_b = node_a - (rows-1)
+                    graph.add_edge(node_a, node_b, edge_parameter[0])
+            # y direction
+            if edge_parameter[1] != 0.0:
+                for x in range(rows):
+                    node_a = rows*(cols-1) + x
+                    node_b = node_a + 1
+                    graph.add_edge(node_a, node_b, edge_parameter[1])
+            # diagonal direction
+            if edge_parameter[2] != 0.0:
+                for y in range(cols-1):
+                    node_a = (y+1)*rows - 1
+                    node_b = node_a - (rows-1) + rows
+                    graph.add_edge(node_a, node_b, edge_parameter[2])
 
-            for x in range(rows-1):
-                node_a = rows*(cols-1) + x
-                node_b = node_a % rows
-                graph.add_edge(node_a, node_b, edge_parameter[1])
-                node_b = node_a % rows + 1
-                graph.add_edge(node_a, node_b, edge_parameter[2])
+                for x in range(rows-1):
+                    node_a = rows*(cols-1) + x
+                    node_b = node_a % rows + 1
+                    graph.add_edge(node_a, node_b, edge_parameter[2])
             
-            node_a = rows*cols - 1
-            node_b = rows*(cols-1)
-            graph.add_edge(node_a, node_b, edge_parameter[0])
-            node_b = rows - 1
-            graph.add_edge(node_a, node_b, edge_parameter[1])
-            node_b = 0
-            graph.add_edge(node_a, node_b, edge_parameter[2])
+                node_a = rows*cols - 1
+                node_b = 0
+                graph.add_edge(node_a, node_b, edge_parameter[2])
             
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
