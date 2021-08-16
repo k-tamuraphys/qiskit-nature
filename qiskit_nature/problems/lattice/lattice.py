@@ -1,4 +1,5 @@
-from retworkx import PyGraph, NodeIndices
+from numpy.lib.type_check import real
+from retworkx import PyGraph, NodeIndices, adjacency_matrix
 from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
@@ -68,14 +69,13 @@ class Lattice:
 
     def to_adjacency_matrix(self) -> np.ndarray:
         """returns the hopping matrix from weighted edges
+        the weighted edge list is interpreted as the upper triangular matrix
         """
-        adjacency_matrix = np.zeros((self.num_nodes, self.num_nodes), dtype=complex)
-        for node_a, node_b, weight in self.weighted_edge_list:
-            node_a, node_b = tuple(sorted([node_a, node_b]))
-            adjacency_matrix[node_a, node_b] = weight
-
-        adjacency_matrix = adjacency_matrix + np.conjugate(np.triu(adjacency_matrix, k=1).T)
-        return adjacency_matrix
+        real_part = adjacency_matrix(self._graph, weight_fn=lambda x :np.real(x))
+        real_part = real_part - (1/2)*np.diag(real_part.diagonal())
+        imag_part = adjacency_matrix(self._graph, weight_fn=lambda x :np.imag(x))
+        imag_part = np.triu(imag_part) - np.triu(imag_part).T
+        return real_part + 1.0j*imag_part
 
     def draw(self, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
         """draws a lattice
