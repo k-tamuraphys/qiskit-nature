@@ -127,9 +127,8 @@ class LineLattice(Lattice):
 
     
     @classmethod
-    def from_adjacency_matrix(cls, adjacency_matrix: np.ndarray) -> "Lattice":
-        # check if the matrix is appropriate foe a one-dimensional lattice -> Not Implemented Error?
-        return Lattice.from_adjacency_matrix(adjacency_matrix)
+    def from_adjacency_matrix(cls):
+        raise NotImplementedError()
         
 class SquareLattice(Lattice):
     def __init__(
@@ -218,6 +217,10 @@ class SquareLattice(Lattice):
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
                     
         super().__init__(graph)
+
+        @classmethod
+        def from_adjacency_matrix(cls):
+            raise NotImplementedError()
 class TriangularLattice(Lattice):
     def __init__(
         self,
@@ -291,7 +294,7 @@ class TriangularLattice(Lattice):
             if edge_parameter[1] != 0.0:
                 for x in range(rows):
                     node_a = rows*(cols-1) + x
-                    node_b = node_a + 1
+                    node_b = node_a % rows
                     graph.add_edge(node_a, node_b, edge_parameter[1])
             # diagonal direction
             if edge_parameter[2] != 0.0:
@@ -314,6 +317,9 @@ class TriangularLattice(Lattice):
 
         super().__init__(graph)
 
+        @classmethod
+        def from_adjacency_matrix(cls):
+            raise NotImplementedError()
 class HexagonalLattice(Lattice):
     # 境界条件?
     pass
