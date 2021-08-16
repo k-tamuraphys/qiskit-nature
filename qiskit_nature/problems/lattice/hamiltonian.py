@@ -9,7 +9,7 @@ class FermiHubbard:
             lattice : lattice geometry on which the model is defined
             onsite_interaction : the strength of the on-site interaction
         """
-        self._lattice = lattice # lattice を後から変えることは想定しない
+        self._lattice = lattice 
         self.onsite_interaction = onsite_interaction
     
     @property
@@ -25,7 +25,7 @@ class FermiHubbard:
         return self.lattice.to_adjacency_matrix()
     
         
-    def second_q_ops(self, sparse_label:bool = False) -> FermionicOp: #他のモジュールに合わせた名前
+    def second_q_ops(self, sparse_label:bool=False) -> FermionicOp:
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
         Args:
         sparse_label:the label is represented by sparse mode.
@@ -39,7 +39,7 @@ class FermiHubbard:
         register_length = 2*self._lattice.num_nodes
         # kinetic terms
         for spin in range(2):
-            for node_a, node_b, weight in weighted_edge_list: # edge に重複があってはいけない
+            for node_a, node_b, weight in weighted_edge_list: # no duplication in weighted_edge_list is assumed 
                 if node_a == node_b:
                     index = 2*node_a + spin
                     kinetic_ham.append((f"N_{index}", weight))
