@@ -19,22 +19,22 @@ class Lattice:
 
     @property
     def graph(self) -> PyGraph:
-        return self._graph 
+        return self._graph.copy()
 
     @property
     def num_nodes(self) -> int:
-        return self._graph.num_nodes()
+        return self.graph.num_nodes()
 
     @property
     def nodes(self) -> NodeIndices:
-        return self._graph.node_indexes()
+        return self.graph.node_indexes()
     
     @property
     def weighted_edge_list(self) -> WeightedEdgeList:
-        return self._graph.weighted_edge_list()
+        return self.graph.weighted_edge_list()
     
     def copy(self) -> "Lattice":
-        return Lattice(self._graph.copy())
+        return Lattice(self.graph.copy())
 
     
     @classmethod
@@ -71,9 +71,9 @@ class Lattice:
         """returns the hopping matrix from weighted edges
         the weighted edge list is interpreted as the upper triangular matrix
         """
-        real_part = adjacency_matrix(self._graph, weight_fn=lambda x :np.real(x))
+        real_part = adjacency_matrix(self.graph, weight_fn=lambda x :np.real(x))
         real_part = real_part - (1/2)*np.diag(real_part.diagonal())
-        imag_part = adjacency_matrix(self._graph, weight_fn=lambda x :np.imag(x))
+        imag_part = adjacency_matrix(self.graph, weight_fn=lambda x :np.imag(x))
         imag_part = np.triu(imag_part) - np.triu(imag_part).T
         return real_part + 1.0j*imag_part
 
@@ -83,10 +83,10 @@ class Lattice:
             self_loop: draw self-loops in a lattice
         """
         if self_loop == True:
-            mpl_draw(self._graph, pos, ax, arrows, with_labels, **kwargs)
+            mpl_draw(self.graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
         elif self_loop == False:
-            graph_no_loop = self._graph.copy()
+            graph_no_loop = self.graph
             self_loops = [(i, i) for i in range(self.num_nodes) if graph_no_loop.has_edge(i, i)]
             graph_no_loop.remove_edges_from(self_loops)
             mpl_draw(graph_no_loop, pos, ax, arrows, with_labels, **kwargs)
