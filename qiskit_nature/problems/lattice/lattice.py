@@ -3,6 +3,7 @@ from retworkx.visualization import mpl_draw
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Tuple, Union
+from itertools import product
 
 class Lattice:
     # multigraph=False is assumed
@@ -93,6 +94,82 @@ class Lattice:
         else:
             raise ValueError({f"Invalid value for self_loop is given: {self_loop}"})
 
+
+
+class Hyperrectangle(Lattice):
+    def __init__(
+        self,
+        dim:int,
+        size: Tuple[int, ...],
+        edge_parameter: Union[complex, Tuple[complex, ...]] = 1.0,
+        onsite_parameter:complex = 0.0,
+        boundary_condition:Union[str, Tuple[str, ...]] = "open"
+    ) -> "Lattice":
+
+        self.dim = dim
+
+        # size
+        if len(size) != dim:
+            raise ValueError(f"The length of `size` must be {dim}.")
+        self.size = size
+
+        # edge parameter
+        if isinstance(edge_parameter, (int, float, complex)):
+            edge_parameter = (edge_parameter, edge_parameter)
+        elif isinstance(edge_parameter, tuple) and len(edge_parameter) == dim:
+            pass
+        else:
+            raise TypeError(f"Type of `edge_parameter` must be int, float, complex, or tuple of length {dim}, not {type(edge_parameter)}.")
+        self.edge_parameter = edge_parameter
+        # onsite parameter
+        self.onsite_parameter = onsite_parameter
+
+        # boundary condition
+        if isinstance(boundary_condition, str):
+            boundary_condition = (boundary_condition, )*dim
+        elif isinstance(boundary_condition, tuple) and len(boundary_condition) == dim:
+            pass
+        else:
+            raise TypeError(f"Type of `boundary_condition` must be str, or tuple of length {dim}, not {type(boundary_condition)}.")
+        self.boundary_conditions = boundary_condition
+
+
+        graph = PyGraph(multigraph=False)
+        graph.add_nodes_from(range(np.prod(size)))
+
+        coordinates = list(product(*map(range, size)))
+        base = np.array([np.prod(size[:i]) for i in range(dim)], dtype=int)
+        for d in range(dim):
+            if edge_parameter[d] != 0.0:
+                for coord in coordinates:
+                    if coord[d] != size[d] - 1:
+                        node_a = np.dot(coord, base)
+                        node_b = node_a + base[d]
+                        graph.add_edge(node_a, node_b, edge_parameter[d])
+
+
+        # onsite parameter
+        if onsite_parameter != 0.0:
+            for node_a in range(np.prod(size)):
+                graph.add_edge(node_a, node_a, onsite_parameter)
+        
+        # boundary condition
+        for d in range(dim):
+            if boundary_condition[d] == "open":
+                pass
+            elif boundary_condition[d] == "periodic":
+                if size[d] > 2: # open and periodic boundary condition for a lattice with two sites are the same
+                    size_list = list(size)
+                    size_list[d] = 1
+                    coordinates = list(product(*map(range, size_list)))
+                    for coord in coordinates:
+                        node_b = np.dot(coord, base)
+                        node_a = node_b + base[d]*(size[d]-1)
+                        graph.add_edge(node_a, node_b, edge_parameter[d])
+            else:
+                raise ValueError(f"Invalid `boundary condition` {boundary_condition[d]} is given. `boundary condition` must be `open` or `periodic`.")
+        super().__init__(graph)
+
 class LineLattice(Lattice):
     def __init__(
         self,
@@ -112,8 +189,9 @@ class LineLattice(Lattice):
         if boundary_condition == "open":
             pass
         elif boundary_condition == "periodic":
-            if edge_parameter != 0.0:
-                weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
+            if num_nodes > 2:
+                if edge_parameter != 0.0:
+                    weighted_edge_list.append((num_nodes-1, 0, edge_parameter))
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition} is given. `boundary condition` must be `open` or `periodic`.")
         if onsite_parameter != 0.0:
@@ -134,8 +212,8 @@ class SquareLattice(Lattice):
         self,
         rows:int, # length of x-direction
         cols:int, # length of y-direction
-        edge_parameter:Union[complex, Tuple[complex, complex]] = 1.0, #0の時にエッジが無視されない！
-        onsite_parameter:complex = 0.0, # 0の時にエッジが無視されない！
+        edge_parameter:Union[complex, Tuple[complex, complex]] = 1.0, 
+        onsite_parameter:complex = 0.0, 
         boundary_condition:Union[str, Tuple[str, str]] = "open"
     ) -> "Lattice":
 
@@ -195,11 +273,12 @@ class SquareLattice(Lattice):
         if boundary_condition[0] == "open":
             pass
         elif boundary_condition[0] == "periodic":
-            if edge_parameter[0] != 0.0:
-                for y in range(cols):
-                    node_a = (y+1)*rows - 1
-                    node_b = node_a - (rows-1)
-                    graph.add_edge(node_a, node_b, edge_parameter[0])
+            if rows > 2:
+                if edge_parameter[0] != 0.0:
+                    for y in range(cols):
+                        node_a = (y+1)*rows - 1
+                        node_b = node_a - (rows-1)
+                        graph.add_edge(node_a, node_b, edge_parameter[0])
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[0]} is given. `boundary condition` must be `open` or `periodic`.")
 
@@ -207,11 +286,12 @@ class SquareLattice(Lattice):
         if boundary_condition[1] == "open":
             pass
         elif boundary_condition[1] == "periodic":
-            if edge_parameter[1] != 0.0:
-                for x in range(rows):
-                    node_a = rows*(cols-1) + x
-                    node_b = node_a % rows
-                    graph.add_edge(node_a, node_b, edge_parameter[1])
+            if cols > 2:
+                if edge_parameter[1] != 0.0:
+                    for x in range(rows):
+                        node_a = rows*(cols-1) + x
+                        node_b = node_a % rows
+                        graph.add_edge(node_a, node_b, edge_parameter[1])
         else:
             raise ValueError(f"Invalid `boundary condition` {boundary_condition[1]} is given. `boundary condition` must be `open` or `periodic`.")
                     
@@ -319,6 +399,8 @@ class TriangularLattice(Lattice):
     @classmethod
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
+
+
 """
 class HexagonalLattice(Lattice):
     # boundary condition -> "open", "periodic", "irregular?"
