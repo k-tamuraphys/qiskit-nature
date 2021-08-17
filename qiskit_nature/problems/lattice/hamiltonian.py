@@ -1,13 +1,14 @@
+from typing import Union
 from lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
 
 class FermiHubbard:
-    def __init__(self, lattice:Lattice, onsite_interaction:float):
+    def __init__(self, lattice:Lattice, onsite_interaction:complex):
         """
         Args:
-            lattice : lattice geometry on which the model is defined
-            onsite_interaction : the strength of the on-site interaction
+            lattice: lattice geometry on which the model is defined
+            onsite_interaction: the strength of the on-site interaction
         """
         self._lattice = lattice 
         self.onsite_interaction = onsite_interaction
@@ -24,6 +25,31 @@ class FermiHubbard:
         """
         return self.lattice.to_adjacency_matrix()
     
+    @classmethod
+    def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbard":
+        """ set a uniform hopping parameter and on-site potential over a given lattice
+        Args:
+            lattice: lattice geometry on which the model is defined
+            uniform_hopping: hopping parameter 
+            uniform_onsite_potential: on-site potential
+            onsite_interaction: the strength of the on-site interaction
+        """
+        graph = lattice.graph
+        for node_a, node_b, _ in graph.weighted_edge_list():
+            if node_a == node_b:
+                pass
+            else:
+                graph.update_edge(node_a, node_b, uniform_hopping)
+
+        for node_a in graph.node_indexes():
+            if graph.has_edge(node_a, node_a):
+                graph.update_edge(node_a, node_a, uniform_onsite_potential)
+            else:
+                graph.add_edge(node_a, node_a, uniform_onsite_potential)
+
+        return cls(Lattice(graph), onsite_interaction)
+
+
         
     def second_q_ops(self, sparse_label:bool=False) -> FermionicOp:
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
@@ -42,7 +68,7 @@ class FermiHubbard:
             for node_a, node_b, weight in weighted_edge_list: # no duplication in weighted_edge_list is assumed 
                 if node_a == node_b:
                     index = 2*node_a + spin
-                    kinetic_ham.append((f"N_{index}", weight))
+                    kinetic_ham.append((f"N_{index}", weight)) # onsite potential
 
                 else:
                     if node_a < node_b:
