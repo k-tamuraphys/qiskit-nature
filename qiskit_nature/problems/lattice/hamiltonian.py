@@ -24,7 +24,6 @@ class FermiHubbard:
             hopping matrix
         """
         return self.lattice.to_adjacency_matrix()
-
     @classmethod
     def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbard":
         """ set a uniform hopping parameter and on-site potential over a given lattice
@@ -48,7 +47,6 @@ class FermiHubbard:
                 graph.add_edge(node_a, node_a, uniform_onsite_potential)
 
         return cls(Lattice(graph), onsite_interaction)
-
 
 
     def second_q_ops(self, sparse_label:bool=False) -> FermionicOp:
