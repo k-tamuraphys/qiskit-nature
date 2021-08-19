@@ -304,7 +304,7 @@ class TriangularLattice(Lattice):
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
 
-"""
+""" other standard lattices
 class Ladder(Lattice):
     pass
 class HexagonalLattice(Lattice):
@@ -315,8 +315,7 @@ class KagomeLattice(Lattice):
     pass
 """
 
-####################################################
-####################################################
+""" previous versions od Line and Square lattice
 class LineLattice_pre(Lattice):
     def __init__(
         self,
@@ -448,5 +447,5 @@ class SquareLattice_pre(Lattice):
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
 
-
+"""
 
