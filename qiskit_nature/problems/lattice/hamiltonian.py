@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
@@ -49,10 +49,10 @@ class FermiHubbard:
         return cls(Lattice(graph), onsite_interaction)
 
 
-    def second_q_ops(self, sparse_label:bool=False) -> FermionicOp:
+    def second_q_ops(self, display_format:Optional[str]=None) -> FermionicOp:
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
         Args:
-        sparse_label:the label is represented by sparse mode.
+        display_format: If sparse, the label is represented sparsely during output. if dense, the label is represented densely during output. (default: dense)
 
         Returns:
             FermionicOp: Hamiltonian of the Fermi-Hubbard model
@@ -88,7 +88,7 @@ class FermiHubbard:
 
         ham = kinetic_ham + interaction_ham
         
-        return FermionicOp(ham, register_length=register_length, sparse_label=sparse_label)
+        return FermionicOp(ham, register_length=register_length, display_format=display_format)
 
     @classmethod
     def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbard":
