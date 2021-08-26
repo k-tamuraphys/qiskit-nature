@@ -3,7 +3,7 @@ from lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
 
-class FermiHubbard:
+class FermiHubbardModel:
     def __init__(self, lattice:Lattice, onsite_interaction:complex):
         """
         Args:
@@ -25,7 +25,7 @@ class FermiHubbard:
         """
         return self.lattice.to_adjacency_matrix()
     @classmethod
-    def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbard":
+    def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbardModel":
         """ set a uniform hopping parameter and on-site potential over a given lattice
         Args:
             lattice: lattice geometry on which the model is defined
@@ -91,7 +91,7 @@ class FermiHubbard:
         return FermionicOp(ham, register_length=register_length, display_format=display_format)
 
     @classmethod
-    def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbard":
+    def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbardModel":
         """returns the Hamiltonian of the Fermi-Hubbard model from the given hopping matrix and on-site interaction.
 
         Args:
@@ -99,7 +99,7 @@ class FermiHubbard:
             onsite_interaction (float): the strength of the on-site interaction
 
         Returns:
-            FermiHubbard : Fermi-Hubbard model generated from the given hopping matrix and on-site interaction
+            FermiHubbardModel : Fermi-Hubbard model generated from the given hopping matrix and on-site interaction
         """
         shape = hopping_matrix.shape
         if len(shape) == 2 and shape[0] == shape[1]:
