@@ -3,6 +3,9 @@ import numpy as np
 from typing import Tuple, Union
 from itertools import product
 from .lattice import Lattice
+from retworkx.visualization import mpl_draw
+import matplotlib.pyplot as plt
+
 
 class HyperCubic(Lattice):
     def __init__(
@@ -56,7 +59,8 @@ class HyperCubic(Lattice):
         if onsite_parameter != 0.0:
             for node_a in range(np.prod(size)):
                 graph.add_edge(node_a, node_a, onsite_parameter)
-        
+
+        self.boundary_edges = []
         # boundary condition
         for d in range(self.dim):
             if boundary_condition[d] == "open":
@@ -70,6 +74,7 @@ class HyperCubic(Lattice):
                         node_b = np.dot(coord, base)
                         node_a = node_b + base[d]*(size[d]-1)
                         graph.add_edge(node_a, node_b, edge_parameter[d])
+                        self.boundary_edges.append((node_a, node_b))
             else:
                 raise ValueError(f"Invalid `boundary condition` {boundary_condition[d]} is given. `boundary condition` must be `open` or `periodic`.")
         super().__init__(graph)
@@ -77,3 +82,29 @@ class HyperCubic(Lattice):
     @classmethod
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
+
+    def draw(self, boundary_edges:bool=False, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
+        """draws a lattice
+        Args:
+            boundary_edges: draw edges from the boundaries
+            self_loop: draw self-loops in a lattice
+        """
+        graph = self.graph
+
+        if boundary_edges == True:
+            pass
+        elif boundary_edges == False:
+            graph.remove_edges_from(self.boundary_edges)
+        else:
+            raise TypeError(f"Type of `boundary_edges` must be bool, not {type(boundary_edges)}.")
+
+        if self_loop == True:
+            mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
+            plt.draw()
+        elif self_loop == False:
+            self_loops = [(i, i) for i in range(self.num_nodes) if graph.has_edge(i, i)]
+            graph.remove_edges_from(self_loops)
+            mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
+            plt.draw()
+        else:
+            raise TypeError(f"Type of `self_loop` must be bool, not {type(self_loop)}.")
