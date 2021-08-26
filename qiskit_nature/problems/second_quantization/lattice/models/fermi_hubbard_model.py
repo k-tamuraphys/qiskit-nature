@@ -1,5 +1,5 @@
-from typing import Union, Optional
-from lattice import Lattice
+from typing import Optional
+from qiskit_nature.problems.second_quantization.lattice.lattice.lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
 
