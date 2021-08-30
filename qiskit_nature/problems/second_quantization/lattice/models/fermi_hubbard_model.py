@@ -4,7 +4,7 @@ from qiskit_nature.operators.second_quantization import FermionicOp
 import numpy as np
 
 class FermiHubbardModel:
-    def __init__(self, lattice:Lattice, onsite_interaction:complex):
+    def __init__(self, lattice:Lattice, onsite_interaction:complex) -> None:
         """
         Args:
             lattice: lattice geometry on which the model is defined.
