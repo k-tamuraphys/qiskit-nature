@@ -14,7 +14,17 @@ class HyperCubic(Lattice):
         edge_parameter: Union[complex, Tuple[complex, ...]] = 1.0,
         onsite_parameter:complex = 0.0,
         boundary_condition:Union[str, Tuple[str, ...]] = "open"
-    ) -> "Lattice":
+    ) -> None:
+        """
+        Args:
+            size: lengths of each direction.
+            edge_parameter: weights on the unit edges. Defaults to 1.0.
+            onsite_parameter: weights on the self loop. Defaults to 0.0.
+            boundary_condition: boundary condition for each direction. Defaults to "open".
+
+        Raises:
+            ValueError: given edge parameter or boundary condition are invalid values.
+        """
 
         self.dim = len(size)
 
@@ -23,10 +33,12 @@ class HyperCubic(Lattice):
         # edge parameter
         if isinstance(edge_parameter, (int, float, complex)):
             edge_parameter = (edge_parameter, )*self.dim
-        elif isinstance(edge_parameter, tuple) and len(edge_parameter) == self.dim:
-            pass
-        else:
-            raise TypeError(f"Type of `edge_parameter` must be int, float, complex, or tuple of length {self.dim}, not {type(edge_parameter)}.")
+        elif isinstance(edge_parameter, tuple):
+            if len(edge_parameter) == self.dim:
+                pass
+            else:
+                raise ValueError(f"The length of `edge_parameter` must be the same as that of size, {self.dim}.")
+        
         self.edge_parameter = edge_parameter
         # onsite parameter
         self.onsite_parameter = onsite_parameter
@@ -34,10 +46,12 @@ class HyperCubic(Lattice):
         # boundary condition
         if isinstance(boundary_condition, str):
             boundary_condition = (boundary_condition, )*self.dim
-        elif isinstance(boundary_condition, tuple) and len(boundary_condition) == self.dim:
-            pass
-        else:
-            raise TypeError(f"Type of `boundary_condition` must be str, or tuple of length {self.dim}, not {type(boundary_condition)}.")
+        elif isinstance(boundary_condition, tuple):
+            if len(boundary_condition) == self.dim:
+                pass
+            else:
+                raise ValueError(f"The length of `boundary_condition` must be the same as that of size, {self.dim}.")
+        
         self.boundary_conditions = boundary_condition
 
 
@@ -95,8 +109,6 @@ class HyperCubic(Lattice):
             pass
         elif boundary_edges == False:
             graph.remove_edges_from(self.boundary_edges)
-        else:
-            raise TypeError(f"Type of `boundary_edges` must be bool, not {type(boundary_edges)}.")
 
         if self_loop == True:
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
@@ -106,5 +118,3 @@ class HyperCubic(Lattice):
             graph.remove_edges_from(self_loops)
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        else:
-            raise TypeError(f"Type of `self_loop` must be bool, not {type(self_loop)}.")

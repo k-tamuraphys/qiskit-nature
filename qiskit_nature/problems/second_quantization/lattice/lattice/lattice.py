@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 class Lattice:
     # multigraph=False is assumed
-    def __init__(self, graph:PyGraph):
+    def __init__(self, graph:PyGraph) -> None:
         if not graph.multigraph:
             if graph.edges() == [None]*graph.num_edges(): # If weights are None, initialized as 1.0
                 weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
@@ -43,7 +43,7 @@ class Lattice:
             adjacency_matrix: adjacency_matrix with real or complex matrix elements
 
         Returns:
-            Lattice made from a given adjacency_matrix
+            Lattice generated from a given adjacency_matrix
         """
         
         col_length, row_length = adjacency_matrix.shape
@@ -90,5 +90,3 @@ class Lattice:
             graph_no_loop.remove_edges_from(self_loops)
             mpl_draw(graph_no_loop, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        else:
-            raise ValueError({f"Invalid value for self_loop is given: {self_loop}"})

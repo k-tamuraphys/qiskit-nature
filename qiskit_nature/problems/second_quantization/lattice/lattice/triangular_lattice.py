@@ -9,10 +9,21 @@ class TriangularLattice(Lattice):
         self,
         rows:int,
         cols:int,
-        edge_parameter:Union[complex, Tuple[complex, complex, complex]],
-        onsite_parameter:complex,
-        boundary_condition:str
-    ) -> "Lattice":
+        edge_parameter:Union[complex, Tuple[complex, complex, complex]] = 1.0,
+        onsite_parameter:complex = 0.0,
+        boundary_condition:str = "open"
+    ) -> None:
+        """
+        Args:
+            rows: length of the x direction.
+            cols: length of the y direction.
+            edge_parameter: weights on the unit edges. Defaults to 1.0,
+            onsite_parameter: weights on the self loop. Defaults to 0.0.
+            boundary_condition: boundary condition for each direction. Defaults to "open".
+
+        Raises:
+            ValueError: given edge parameter or boundary condition are invalid values.
+        """
         self.rows = rows
         self.cols = cols
         self.size = (rows, cols)
@@ -21,10 +32,11 @@ class TriangularLattice(Lattice):
 
         if isinstance(edge_parameter, (int, float, complex)):
             edge_parameter = (edge_parameter, edge_parameter, edge_parameter)
-        elif isinstance(edge_parameter, tuple) and len(edge_parameter) == 3:
-            pass
-        else:
-            raise TypeError(f"Type of `edge parameter` must be int, float, complex, or tuple of length 3, not {type(edge_parameter)}.")
+        elif isinstance(edge_parameter, tuple):
+            if len(edge_parameter) == 3:
+                pass
+            else:
+                ValueError(f"The length of `edge_parameter` must be 3, not {len(edge_parameter)}.")
         
         self.edge_parameter = edge_parameter
         self.onsite_parameter = onsite_parameter
@@ -121,8 +133,6 @@ class TriangularLattice(Lattice):
             pass
         elif boundary_edges == False:
             graph.remove_edges_from(self.boundary_edges)
-        else:
-            raise TypeError(f"Type of `boundary_edges` must be bool, not {type(boundary_edges)}.")
 
         if self_loop == True:
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
@@ -132,5 +142,3 @@ class TriangularLattice(Lattice):
             graph.remove_edges_from(self_loops)
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        else:
-            raise TypeError(f"Type of `self_loop` must be bool, not {type(self_loop)}.")

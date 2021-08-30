@@ -7,8 +7,8 @@ class FermiHubbardModel:
     def __init__(self, lattice:Lattice, onsite_interaction:complex):
         """
         Args:
-            lattice: lattice geometry on which the model is defined
-            onsite_interaction: the strength of the on-site interaction
+            lattice: lattice geometry on which the model is defined.
+            onsite_interaction: the strength of the on-site interaction.
         """
         self._lattice = lattice 
         self.onsite_interaction = onsite_interaction
@@ -28,10 +28,10 @@ class FermiHubbardModel:
     def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbardModel":
         """ set a uniform hopping parameter and on-site potential over a given lattice
         Args:
-            lattice: lattice geometry on which the model is defined
-            uniform_hopping: hopping parameter 
-            uniform_onsite_potential: on-site potential
-            onsite_interaction: the strength of the on-site interaction
+            lattice: lattice geometry on which the model is defined.
+            uniform_hopping: hopping parameter.
+            uniform_onsite_potential: on-site potential.
+            onsite_interaction: the strength of the on-site interaction.
         """
         graph = lattice.graph
         for node_a, node_b, _ in graph.weighted_edge_list():
@@ -55,7 +55,7 @@ class FermiHubbardModel:
         display_format: If sparse, the label is represented sparsely during output. if dense, the label is represented densely during output. (default: dense)
 
         Returns:
-            FermionicOp: Hamiltonian of the Fermi-Hubbard model
+            FermionicOp: Hamiltonian of the Fermi-Hubbard model.
         """
         kinetic_ham = []
         interaction_ham = []
@@ -95,15 +95,18 @@ class FermiHubbardModel:
         """returns the Hamiltonian of the Fermi-Hubbard model from the given hopping matrix and on-site interaction.
 
         Args:
-            hopping_matrix (np.ndarray): a real or complex valued square matrix
-            onsite_interaction (float): the strength of the on-site interaction
+            hopping_matrix: a real or complex valued square matrix.
+            onsite_interaction: the strength of the on-site interaction.
 
         Returns:
-            FermiHubbardModel : Fermi-Hubbard model generated from the given hopping matrix and on-site interaction
+            FermiHubbardModel: Fermi-Hubbard model generated from the given hopping matrix and on-site interaction.
+        
+        Raises:
+            ValueError: if the shape of the hopping matrix is invalid.
         """
         shape = hopping_matrix.shape
         if len(shape) == 2 and shape[0] == shape[1]:
             lat = Lattice.from_adjacency_matrix(hopping_matrix)
             return cls(lat, onsite_interaction)
         else:
-            raise ValueError(f"Invalid shape {shape} is given.")
+            raise ValueError(f"Invalid shape of `hopping_matrix`, {shape},  is given.")
