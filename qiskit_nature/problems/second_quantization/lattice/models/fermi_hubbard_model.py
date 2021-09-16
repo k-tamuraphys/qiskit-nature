@@ -1,9 +1,12 @@
+"""The Fermi-Hubbard model"""
 from typing import Optional
+import numpy as np
 from qiskit_nature.problems.second_quantization.lattice.lattice.lattice import Lattice
 from qiskit_nature.operators.second_quantization import FermionicOp
-import numpy as np
+
 
 class FermiHubbardModel:
+    """The Fermi-Hubbard model"""
     def __init__(self, lattice:Lattice, onsite_interaction:complex) -> None:
         """
         Args:
@@ -25,13 +28,21 @@ class FermiHubbardModel:
         """
         return self.lattice.to_adjacency_matrix()
     @classmethod
-    def uniform_parameters(cls, lattice:Lattice, uniform_hopping:complex, uniform_onsite_potential:complex, onsite_interaction:complex) -> "FermiHubbardModel":
+    def uniform_parameters(
+        cls, 
+        lattice:Lattice, 
+        uniform_hopping:complex, 
+        uniform_onsite_potential:complex, 
+        onsite_interaction:complex
+    ) -> "FermiHubbardModel":
         """ set a uniform hopping parameter and on-site potential over a given lattice
         Args:
             lattice: lattice geometry on which the model is defined.
             uniform_hopping: hopping parameter.
             uniform_onsite_potential: on-site potential.
             onsite_interaction: the strength of the on-site interaction.
+        Returns:
+            The Fermi-Hubbard model with uniform parameters
         """
         graph = lattice.graph
         for node_a, node_b, _ in graph.weighted_edge_list():
@@ -52,7 +63,8 @@ class FermiHubbardModel:
     def second_q_ops(self, display_format:Optional[str]=None) -> FermionicOp:
         """returns the Hamiltonian of the Fermi-Hubbard model in terms of FermionicOp
         Args:
-        display_format: If sparse, the label is represented sparsely during output. if dense, the label is represented densely during output. (default: dense)
+        display_format: If sparse, the label is represented sparsely during output. 
+                        If dense, the label is represented densely during output. (default: dense)
 
         Returns:
             FermionicOp: Hamiltonian of the Fermi-Hubbard model.
@@ -63,10 +75,10 @@ class FermiHubbardModel:
         register_length = 2*self._lattice.num_nodes
         # kinetic terms
         for spin in range(2):
-            for node_a, node_b, weight in weighted_edge_list: # no duplication in weighted_edge_list is assumed 
+            for node_a, node_b, weight in weighted_edge_list:
                 if node_a == node_b:
                     index = 2*node_a + spin
-                    kinetic_ham.append((f"N_{index}", weight)) # onsite potential
+                    kinetic_ham.append((f"N_{index}", weight))
 
                 else:
                     if node_a < node_b:
@@ -92,14 +104,16 @@ class FermiHubbardModel:
 
     @classmethod
     def from_parameters(cls, hopping_matrix:np.ndarray, onsite_interaction:float) -> "FermiHubbardModel":
-        """returns the Hamiltonian of the Fermi-Hubbard model from the given hopping matrix and on-site interaction.
+        """returns the Hamiltonian of the Fermi-Hubbard model
+        from the given hopping matrix and on-site interaction.
 
         Args:
             hopping_matrix: a real or complex valued square matrix.
             onsite_interaction: the strength of the on-site interaction.
 
         Returns:
-            FermiHubbardModel: Fermi-Hubbard model generated from the given hopping matrix and on-site interaction.
+            FermiHubbardModel: Fermi-Hubbard model generated
+                                from the given hopping matrix and on-site interaction.
         
         Raises:
             ValueError: if the shape of the hopping matrix is invalid.

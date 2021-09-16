@@ -1,15 +1,25 @@
+"""The Lattice class"""
+from typing import List, Tuple
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 from retworkx import PyGraph, NodeIndices, adjacency_matrix, WeightedEdgeList
 from retworkx.visualization import mpl_draw
-import matplotlib.pyplot as plt
-import numpy as np
-from typing import List, Tuple
 
 class Lattice:
-    # multigraph=False is assumed
+    """Lattice class"""
+
     def __init__(self, graph:PyGraph) -> None:
+        """
+        Args:
+            graph: Input graph for Lattice. 'multigraph' must be False.
+
+        Raises:
+            ValueError: A given graph is invalid.
+        """
         if not graph.multigraph:
-            if graph.edges() == [None]*graph.num_edges(): # If weights are None, initialized as 1.0
-                weighted_edges = [edge + (1.,) for edge in graph.edge_list()] 
+            if graph.edges() == [None]*graph.num_edges():
+                weighted_edges = [edge + (1.,) for edge in graph.edge_list()]
                 for start, end, weight in weighted_edges:
                     graph.update_edge(start, end, weight)
             self._graph = graph
@@ -27,25 +37,25 @@ class Lattice:
     @property
     def nodes(self) -> NodeIndices:
         return self.graph.node_indexes()
-    
+
     @property
     def weighted_edge_list(self) -> WeightedEdgeList:
         return self.graph.weighted_edge_list()
-    
+
     def copy(self) -> "Lattice":
         return Lattice(self.graph.copy())
 
-    
+
     @classmethod
     def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice":
         """returns an instance of Lattice from a given hopping_matrix
         Args:
-            adjacency_matrix: adjacency_matrix with real or complex matrix elements
+            adjacency_matrix: Adjacency matrix with real or complex matrix elements
 
         Returns:
             Lattice generated from a given adjacency_matrix
         """
-        
+
         col_length, row_length = adjacency_matrix.shape
         graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(col_length))
@@ -60,6 +70,10 @@ class Lattice:
     @classmethod
     def from_nodes_edges(cls, num_nodes:int, weighted_edges:List[Tuple[int, int, complex]]) -> "Lattice":
         """returns an instance of Lattice from the number of nodes and the list of edges
+
+        Returns:
+            num_nodes: The number of nodes.
+            weighted_edges: A list of tuples consisting of two nodes and the weight between them.
         """
         graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(num_nodes))
@@ -76,15 +90,23 @@ class Lattice:
         imag_part = np.triu(imag_part) - np.triu(imag_part).T
         return real_part + 1.0j*imag_part
 
-    def draw(self, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
+    def draw(
+        self, 
+        self_loop:bool=False, 
+        pos:dict=None, 
+        ax:Axes=None, 
+        arrows:bool=True, 
+        with_labels:bool=False, 
+        **kwargs
+    ):
         """draws a lattice
         Args:
             self_loop: draw self-loops in a lattice
         """
-        if self_loop == True:
+        if self_loop:
             mpl_draw(self.graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        elif self_loop == False:
+        elif not self_loop:
             graph_no_loop = self.graph
             self_loops = [(i, i) for i in range(self.num_nodes) if graph_no_loop.has_edge(i, i)]
             graph_no_loop.remove_edges_from(self_loops)

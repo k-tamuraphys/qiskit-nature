@@ -1,7 +1,9 @@
-from .hyper_cubic import HyperCubic
+"""Square lattice"""
 from typing import Tuple, Union
+from .hyper_cubic import HyperCubic
 
 class SquareLattice(HyperCubic):
+    """Square lattice"""
     def __init__(
         self,
         rows:int,
@@ -26,3 +28,4 @@ class SquareLattice(HyperCubic):
             onsite_parameter=onsite_parameter,
             boundary_condition=boundary_condition
         )
+        

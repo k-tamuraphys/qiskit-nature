@@ -1,10 +1,13 @@
-from retworkx import PyGraph
-import numpy as np
+"""Triangular lattice"""
 from typing import Tuple, Union
-from .lattice import Lattice
-from retworkx.visualization import mpl_draw
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from retworkx import PyGraph
+from retworkx.visualization import mpl_draw
+from .lattice import Lattice
 class TriangularLattice(Lattice):
+    """Triangular lattice"""
     def __init__(
         self,
         rows:int,
@@ -121,7 +124,16 @@ class TriangularLattice(Lattice):
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
 
-    def draw(self, boundary_edges:bool=False, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
+    def draw(
+        self, 
+        boundary_edges:bool=False, 
+        self_loop:bool=False, 
+        pos:dict=None, 
+        ax:Axes=None, 
+        arrows:bool=True, 
+        with_labels:bool=False, 
+        **kwargs
+    ):
         """draws a lattice
         Args:
             boundary_edges: draw edges from the boundaries
@@ -129,15 +141,15 @@ class TriangularLattice(Lattice):
         """
         graph = self.graph
 
-        if boundary_edges == True:
+        if boundary_edges:
             pass
-        elif boundary_edges == False:
+        elif not boundary_edges:
             graph.remove_edges_from(self.boundary_edges)
 
-        if self_loop == True:
+        if self_loop:
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        elif self_loop == False:
+        elif not self_loop:
             self_loops = [(i, i) for i in range(self.num_nodes) if graph.has_edge(i, i)]
             graph.remove_edges_from(self_loops)
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)

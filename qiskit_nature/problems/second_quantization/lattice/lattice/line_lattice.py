@@ -1,6 +1,8 @@
+"""Line lattice"""
 from .hyper_cubic import HyperCubic
 
 class LineLattice(HyperCubic):
+    """Line lattice"""
     def __init__(
         self,
         num_nodes:int,
@@ -22,3 +24,4 @@ class LineLattice(HyperCubic):
             onsite_parameter=onsite_parameter,
             boundary_condition=boundary_condition
         )
+        

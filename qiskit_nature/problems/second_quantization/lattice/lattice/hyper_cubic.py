@@ -1,13 +1,16 @@
-from retworkx import PyGraph
-import numpy as np
+"""The Hyper-Cubic Lattice"""
 from typing import Tuple, Union
 from itertools import product
-from .lattice import Lattice
-from retworkx.visualization import mpl_draw
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from retworkx import PyGraph
+from retworkx.visualization import mpl_draw
+from .lattice import Lattice
 
 
 class HyperCubic(Lattice):
+    """Hyper-cubic lattice in d dimension"""
     def __init__(
         self,
         size:Tuple[int, ...],
@@ -80,7 +83,7 @@ class HyperCubic(Lattice):
             if boundary_condition[d] == "open":
                 pass
             elif boundary_condition[d] == "periodic":
-                if size[d] > 2: # open and periodic boundary condition for a lattice with two sites are the same
+                if size[d] > 2:
                     size_list = list(size)
                     size_list[d] = 1
                     coordinates = list(product(*map(range, size_list)))
@@ -97,7 +100,16 @@ class HyperCubic(Lattice):
     def from_adjacency_matrix(cls):
         raise NotImplementedError()
 
-    def draw(self, boundary_edges:bool=False, self_loop:bool=False, pos=None, ax=None, arrows=True, with_labels=False, **kwargs):
+    def draw(
+        self, 
+        boundary_edges:bool=False, 
+        self_loop:bool=False, 
+        pos:dict=None, 
+        ax:Axes=None, 
+        arrows:bool=True, 
+        with_labels:bool=False, 
+        **kwargs
+    ):
         """draws a lattice
         Args:
             boundary_edges: draw edges from the boundaries
@@ -105,15 +117,15 @@ class HyperCubic(Lattice):
         """
         graph = self.graph
 
-        if boundary_edges == True:
+        if boundary_edges:
             pass
-        elif boundary_edges == False:
+        elif not boundary_edges:
             graph.remove_edges_from(self.boundary_edges)
 
-        if self_loop == True:
+        if self_loop:
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
             plt.draw()
-        elif self_loop == False:
+        elif not self_loop:
             self_loops = [(i, i) for i in range(self.num_nodes) if graph.has_edge(i, i)]
             graph.remove_edges_from(self_loops)
             mpl_draw(graph, pos, ax, arrows, with_labels, **kwargs)
