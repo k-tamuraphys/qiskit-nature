@@ -121,7 +121,7 @@ class TriangularLattice(Lattice):
         super().__init__(graph)
 
     @classmethod
-    def from_adjacency_matrix(cls):
+    def from_adjacency_matrix(cls, input_adjacency_matrix):
         raise NotImplementedError()
 
     def draw(

@@ -18,6 +18,7 @@ class FermiHubbardModel:
     
     @property
     def lattice(self) -> Lattice:
+        """return a copy of the input lattice"""
         return (self._lattice).copy() 
 
     def hopping_matrix(self) -> np.ndarray:

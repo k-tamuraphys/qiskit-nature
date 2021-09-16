@@ -28,21 +28,26 @@ class Lattice:
 
     @property
     def graph(self) -> PyGraph:
+        """return a copy of the input graph"""
         return self._graph.copy()
 
     @property
     def num_nodes(self) -> int:
+        """return the number of nodes"""
         return self.graph.num_nodes()
 
     @property
     def nodes(self) -> NodeIndices:
+        """return the node indexes"""
         return self.graph.node_indexes()
 
     @property
     def weighted_edge_list(self) -> WeightedEdgeList:
+        """return a list of weighted edges"""
         return self.graph.weighted_edge_list()
 
     def copy(self) -> "Lattice":
+        """return a copy of the lattice"""
         return Lattice(self.graph.copy())
 
 

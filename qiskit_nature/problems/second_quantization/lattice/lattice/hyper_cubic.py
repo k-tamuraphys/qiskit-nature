@@ -63,13 +63,13 @@ class HyperCubic(Lattice):
 
         coordinates = list(product(*map(range, size)))
         base = np.array([np.prod(size[:i]) for i in range(self.dim)], dtype=int)
-        for d in range(self.dim):
-            if edge_parameter[d] != 0.0:
+        for dim in range(self.dim):
+            if edge_parameter[dim] != 0.0:
                 for coord in coordinates:
-                    if coord[d] != size[d] - 1:
+                    if coord[dim] != size[dim] - 1:
                         node_a = np.dot(coord, base)
-                        node_b = node_a + base[d]
-                        graph.add_edge(node_a, node_b, edge_parameter[d])
+                        node_b = node_a + base[dim]
+                        graph.add_edge(node_a, node_b, edge_parameter[dim])
 
 
         # onsite parameter
@@ -79,25 +79,25 @@ class HyperCubic(Lattice):
 
         self.boundary_edges = []
         # boundary condition
-        for d in range(self.dim):
-            if boundary_condition[d] == "open":
+        for dim in range(self.dim):
+            if boundary_condition[dim] == "open":
                 pass
-            elif boundary_condition[d] == "periodic":
-                if size[d] > 2:
+            elif boundary_condition[dim] == "periodic":
+                if size[dim] > 2:
                     size_list = list(size)
-                    size_list[d] = 1
+                    size_list[dim] = 1
                     coordinates = list(product(*map(range, size_list)))
                     for coord in coordinates:
                         node_b = np.dot(coord, base)
-                        node_a = node_b + base[d]*(size[d]-1)
-                        graph.add_edge(node_a, node_b, edge_parameter[d])
+                        node_a = node_b + base[dim]*(size[dim]-1)
+                        graph.add_edge(node_a, node_b, edge_parameter[dim])
                         self.boundary_edges.append((node_a, node_b))
             else:
-                raise ValueError(f"Invalid `boundary condition` {boundary_condition[d]} is given. `boundary condition` must be `open` or `periodic`.")
+                raise ValueError(f"Invalid `boundary condition` {boundary_condition[dim]} is given. `boundary condition` must be `open` or `periodic`.")
         super().__init__(graph)
 
     @classmethod
-    def from_adjacency_matrix(cls):
+    def from_adjacency_matrix(cls, input_adjacency_matrix):
         raise NotImplementedError()
 
     def draw(
