@@ -12,7 +12,7 @@ class Lattice:
     def __init__(self, graph:PyGraph) -> None:
         """
         Args:
-            graph: Input graph for Lattice. 'multigraph' must be False.
+            graph: Input graph for Lattice. `multigraph` must be False.
 
         Raises:
             ValueError: A given graph is invalid.
@@ -47,21 +47,21 @@ class Lattice:
 
 
     @classmethod
-    def from_adjacency_matrix(cls, adjacency_matrix:np.ndarray) -> "Lattice":
+    def from_adjacency_matrix(cls, input_adjacency_matrix:np.ndarray) -> "Lattice":
         """returns an instance of Lattice from a given hopping_matrix
         Args:
-            adjacency_matrix: Adjacency matrix with real or complex matrix elements
+            input_adjacency_matrix: Adjacency matrix with real or complex matrix elements
 
         Returns:
             Lattice generated from a given adjacency_matrix
         """
 
-        col_length, row_length = adjacency_matrix.shape
+        col_length, row_length = input_adjacency_matrix.shape
         graph = PyGraph(multigraph=False)
         graph.add_nodes_from(range(col_length))
         for source_index in range(col_length):
             for target_index in range(source_index, row_length):
-                weight = adjacency_matrix[source_index, target_index]
+                weight = input_adjacency_matrix[source_index, target_index]
                 if not weight == 0.0:
                     graph.add_edge(source_index, target_index, weight)
                     
